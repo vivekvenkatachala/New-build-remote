@@ -10,10 +10,14 @@ import (
 
 func main() {
 	r := mux.NewRouter()
+	 
+	port := "5000"
 
 	r.HandleFunc("/start_build",controller.StartBuild)
 
-	log.Fatal(http.ListenAndServe(":5000", r))
+	log.Printf("Connected to http://localhost:%s/ for remote_build backend", port)
+
+	log.Fatal(http.ListenAndServe(":"+port, r))
 }
 	
 	
