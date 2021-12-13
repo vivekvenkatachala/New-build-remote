@@ -48,6 +48,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 	_, err := internal.ValidateFileExtension(input.FileExtension)
 	if err != nil {
 		helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+		return
 	}
 
 	if input.FileExtension == "zip" || input.FileExtension == "tar" || input.FileExtension == "tar.gz" {
@@ -99,13 +100,14 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		filePath, err := service.FindFile("extracted_file/" + input.AppId)
 		if filePath == "Docker file doesn't exists" {
 			//Delete extracted file and image
-
+			Out.Close()
 			err = service.DeletedSourceFile("extracted_file/" + input.AppId)
 			if err != nil {
 				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 				return
 			}
 			helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": filePath})
+			return
 		}
 		if err != nil {
 			log.Println(err)
