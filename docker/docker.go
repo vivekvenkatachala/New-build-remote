@@ -54,8 +54,8 @@ func NewDockerClient() (*DockerClient, error) {
 
 func RegistryAuth(token string) types.AuthConfig {
 	return types.AuthConfig{
-		Username:      "sundar21",
-		Password:      "SmartWork@123",
+		Username:      "nife123",
+		Password:      "Nife@2020",
 		ServerAddress: "hub.docker.com",
 	}
 }

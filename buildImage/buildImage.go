@@ -111,7 +111,7 @@ func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, 
 	err = cli.PushImage(ctx, image.Tag, outs)
 	
 	if err != nil {
-		return nil, nil
+		return nil,err
 	}
 
 
