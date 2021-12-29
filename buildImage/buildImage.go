@@ -90,10 +90,9 @@ func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, 
 	}
 
 	imgSummary, err := cli.FindImage(ctx, tag)
-
 	
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
 	image := &Image{
@@ -105,7 +104,7 @@ func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, 
 
 	outs, err := os.Create("debugImage")
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	outs.Close()
 	err = cli.PushImage(ctx, image.Tag, outs)
