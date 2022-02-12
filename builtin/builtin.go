@@ -28,7 +28,7 @@ Uses and exposes port 8080 internally.`,
 		Template: `FROM ruby:2.7
 WORKDIR /usr/src/app
 COPY Gemfile ./
-RUN bundle install
+RUN cd /usr/src/app && bundle install
 COPY . .
 ENV PORT=8080
 EXPOSE 8080
