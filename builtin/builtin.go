@@ -73,13 +73,18 @@ Uses and exposes port 8080 internally.
 		# Command to run the executable
 		CMD ["./main"]
 `},
-	{Name: "static",
+	{Name: "static react",
 		Description: "Web server builtin",
-		Details:     `All files are copied to the image and served, except files with executable permission set.`,
-		Template: `FROM pierrezemb/gostatic
-COPY . /srv/http/
-CMD ["-port","8080"{{if .httpsonly}},"-https-promote"{{ end }}{{if .log}},"-enable-logging"{{end}}]
-	`, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
+		Details:     `All files are copied to the image and served, It will work with ReactJS and AngularJS`,
+		Template: `FROM node:latest
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
+`, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
+
 	{Name: "hugo-static",
 		Description: "Hugo static build with web server builtin",
 		Details:     `Hugo static build, then all public files are copied to the image and served, except files with executable permission set. Uses and exposes port 8080 internally.`,
