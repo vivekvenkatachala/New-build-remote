@@ -78,6 +78,8 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 
 		if input.BuildType == "Builtin" {
 
+			fmt.Println("inside builtin")
+
 			filePath, _ := service.FindFile("extracted_file/" + input.AppId)
 
 			if filePath == "Docker file doesn't exists" {
