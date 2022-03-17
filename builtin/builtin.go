@@ -85,6 +85,20 @@ EXPOSE 3000
 CMD ["npm", "start"]
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
+	{Name: "static angular",
+		Description: "Web server builtin",
+		Details:     `All files are copied to the image and served, It will work with AngularJS`,
+		Template: `FROM node:16 as build
+WORKDIR /usr/local/app
+COPY ./ /usr/local/app/
+RUN export NODE_OPTIONS=--openssl-legacy-provider
+RUN npm install
+RUN npm run build
+FROM nginx:latest
+COPY --from=build  /usr/local/app/dist/app /usr/share/nginx/html
+EXPOSE 80
+`, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
+
 	{Name: "hugo-static",
 		Description: "Hugo static build with web server builtin",
 		Details:     `Hugo static build, then all public files are copied to the image and served, except files with executable permission set. Uses and exposes port 8080 internally.`,
@@ -111,17 +125,17 @@ RUN pip install -r requirements.txt
 CMD ["/usr/bin/hivemind", "/app/Procfile"]
 `, Settings: []Setting{{"hiveversion", "1.0.6", "Version of Hivemind"}, {"pythonbase", "3.8-slim-buster", "Tag for base Python image"}}},
 
-{Name: "elixir",
+	{Name: "elixir",
 		Description: "Elixir builtin",
 		Details:     `All files are copied to the image and served, It will work with Elixir`,
 		Template: `FROM elixir:latest
-		RUN mkdir /app
-		COPY . /app
-		WORKDIR /app
-		RUN mix local.hex --force
-		RUN mix do deps.get
-		RUN mix do compile
-		CMD ["mix", "phx.server"]
-		EXPOSE 4000
+RUN mkdir /app
+COPY . /app
+WORKDIR /app
+RUN mix local.hex --force
+RUN mix do deps.get
+RUN mix do compile
+CMD ["mix", "phx.server"]
+EXPOSE 4000
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 }
