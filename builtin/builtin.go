@@ -69,7 +69,7 @@ Uses and exposes port 8080 internally.
 		# Build the Go app
 		RUN go build -o main .		
 		# Expose port 8080 to the outside world
-		EXPOSE 8080		
+		EXPOSE 8080
 		# Command to run the executable
 		CMD ["./main"]
 `},
@@ -110,4 +110,18 @@ WORKDIR /app
 RUN pip install -r requirements.txt
 CMD ["/usr/bin/hivemind", "/app/Procfile"]
 `, Settings: []Setting{{"hiveversion", "1.0.6", "Version of Hivemind"}, {"pythonbase", "3.8-slim-buster", "Tag for base Python image"}}},
+
+{Name: "elixir",
+		Description: "Elixir builtin",
+		Details:     `All files are copied to the image and served, It will work with Elixir`,
+		Template: `FROM elixir:latest
+		RUN mkdir /app
+		COPY . /app
+		WORKDIR /app
+		RUN mix local.hex --force
+		RUN mix do deps.get
+		RUN mix do compile
+		CMD ["mix", "phx.server"]
+		EXPOSE 4000
+`, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 }
