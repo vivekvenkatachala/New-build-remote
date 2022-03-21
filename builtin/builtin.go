@@ -90,12 +90,12 @@ CMD ["npm", "start"]
 		Details:     `All files are copied to the image and served, It will work with AngularJS`,
 		Template: `FROM node:16 as build
 WORKDIR /usr/local/app
-COPY ./ /usr/local/app/
+COPY . .
 RUN export NODE_OPTIONS=--openssl-legacy-provider
 RUN npm install
 RUN npm run build
 FROM nginx:latest
-COPY --from=build  /usr/local/app/dist/app /usr/share/nginx/html
+COPY --from=build /usr/share/nginx/html
 EXPOSE 80
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
@@ -137,5 +137,17 @@ RUN mix do deps.get
 RUN mix do compile
 CMD ["mix", "phx.server"]
 EXPOSE 4000
+`, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
+
+	{Name: "remix",
+		Description: "Go Builtin",
+		Details:     `All files are copied to the image and served`,
+		Template: `FROM node:latest
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["npm", "start"]
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 }
