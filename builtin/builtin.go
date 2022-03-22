@@ -76,7 +76,7 @@ Uses and exposes port 8080 internally.
 	{Name: "static react",
 		Description: "Web server builtin",
 		Details:     `All files are copied to the image and served, It will work with ReactJS and AngularJS`,
-		Template: `FROM node:latest
+		Template: `FROM node:alpine
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
@@ -142,7 +142,7 @@ EXPOSE 4000
 	{Name: "remix",
 		Description: "remix Builtin",
 		Details:     `All files are copied to the image and served`,
-		Template: `FROM node:latest
+		Template: `FROM node:alpine
 WORKDIR /usr/src/app
 COPY package*.json ./
 RUN npm install
