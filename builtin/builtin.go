@@ -140,7 +140,7 @@ EXPOSE 4000
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
 	{Name: "remix",
-		Description: "Go Builtin",
+		Description: "remix Builtin",
 		Details:     `All files are copied to the image and served`,
 		Template: `FROM node:latest
 WORKDIR /usr/src/app
