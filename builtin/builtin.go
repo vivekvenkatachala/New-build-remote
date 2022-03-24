@@ -150,6 +150,15 @@ COPY package*.json ./
 RUN npm install
 COPY . .
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["npm", "start"]	
+`, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
+
+{Name: "java server page",
+		Description: "Web server builtin",
+		Details:     `All files are copied to the image and served`,
+		Template: `FROM tomcat:8.0-alpine
+ADD ./Abbott /usr/local/tomcat/webapps/abbott		
+EXPOSE 8080		
+CMD ["catalina.sh", "run"]
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 }
