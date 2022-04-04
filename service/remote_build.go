@@ -23,7 +23,6 @@ func GetFileFromS3(SourceURL string) ([]byte, error) {
 	return reader, nil
 }
 
-
 func FindFile(path string) (string, error) {
 
 	f, err := os.Open(path)
@@ -39,6 +38,12 @@ func FindFile(path string) (string, error) {
 	var pathName string
 	for _, v := range files {
 		pathName = v.Name()
+		if pathName == "__MACOSX" {
+			continue
+		} else {
+			break
+		}
+
 	}
 
 	filePath := path + "/" + pathName
@@ -69,14 +74,13 @@ func FindFile(path string) (string, error) {
 	return filePath, err
 }
 
-
-func DeletedSourceFile(filePath string)(error){
+func DeletedSourceFile(filePath string) error {
 	err := os.RemoveAll(filePath)
 	if err != nil {
 		log.Println(err)
 	}
 	file := path.Base(filePath)
-    err = os.Remove(file)
+	err = os.Remove(file)
 	if err != nil {
 		log.Println(err)
 	}
