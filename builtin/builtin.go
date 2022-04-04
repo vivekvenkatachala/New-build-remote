@@ -90,12 +90,14 @@ CMD ["npm", "start"]
 		Details:     `All files are copied to the image and served, It will work with AngularJS`,
 		Template: `FROM node:16 as build
 WORKDIR /usr/local/app
-COPY . .
+COPY ./ /usr/local/app/
 RUN export NODE_OPTIONS=--openssl-legacy-provider
 RUN npm install
-RUN npm run build
+RUN node_modules/.bin/ng build --output-path=dist
 FROM nginx:latest
-COPY --from=build /usr/share/nginx/html
+WORKDIR /usr/local/app
+COPY --from=build  /usr/local/app /usr/local/app
+COPY ./dist /usr/share/nginx/html
 EXPOSE 80
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
