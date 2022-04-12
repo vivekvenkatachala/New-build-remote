@@ -97,17 +97,16 @@ RUN node_modules/.bin/ng build --output-path=dist
 FROM nginx:latest
 WORKDIR /usr/local/app
 COPY --from=build  /usr/local/app /usr/local/app
-COPY ./dist /usr/share/nginx/html
+COPY --from=build /usr/local/app/dist /usr/share/nginx/html
 EXPOSE 80
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
 	{Name: "hugo-static",
 		Description: "Hugo static build with web server builtin",
 		Details:     `Hugo static build, then all public files are copied to the image and served, except files with executable permission set. Uses and exposes port 8080 internally.`,
-		Template: `FROM klakegg/hugo:0.74.0-onbuild AS hugo
-FROM pierrezemb/gostatic
-COPY --from=hugo /target /srv/http/
-CMD ["-port","8080"{{if .httpsonly}},"-https-promote"{{ end }}{{if .log}},"-enable-logging"{{end}}]
+		Template: `FROM klakegg/hugo:0.93.2-onbuild AS hugo
+FROM nginx
+COPY --from=hugo /target /usr/share/nginx/html
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 	{Name: "python",
 		Description: "Python builtin",
