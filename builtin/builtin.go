@@ -75,7 +75,7 @@ Uses and exposes port 8080 internally.
 `},
 	{Name: "static react",
 		Description: "Web server builtin",
-		Details:     `All files are copied to the image and served, It will work with ReactJS and AngularJS`,
+		Details:     `All files are copied to the image and served, It will work with ReactJS`,
 		Template: `FROM node:alpine
 WORKDIR /usr/src/app
 COPY package*.json ./
