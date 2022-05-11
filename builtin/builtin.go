@@ -39,16 +39,15 @@ CMD ["bundle", "exec", "rackup", "--host", "0.0.0.0", "-p", "8080"]
 		Details: `Uses Debian image from https://github.com/hayd/deno-docker.
 runs main.ts with --allow-net set and requires deps.ts for dependencies.
 Uses and exposes port 8080 internally.`,
-		Template: `FROM hayd/debian-deno:1.4.0
-ENV PORT=8080
-EXPOSE 8080
-WORKDIR /app
+		Template: `FROM hayd/alpine-deno:1.5.2
+EXPOSE 1993 
+WORKDIR /app	
 USER deno
-COPY main.ts deps.* ./
-RUN /bin/bash -c "deno cache deps.ts || true"
-ADD . .
-RUN deno cache main.ts
-CMD ["run", {{range .perms}}"{{.}}",{{end}} "main.ts"]
+COPY deps.ts .
+RUN deno cache deps.ts
+COPY . .
+RUN deno cache server.ts
+CMD ["run","--allow-net", "server.ts"]
 `,
 		Settings: []Setting{{"perms", []string{`--allow-net`}, "Array of command line settings to grant permissions, e.g. [\"--allow-net\",\"--allow-read\"] "}},
 	},
@@ -152,7 +151,7 @@ EXPOSE 3000
 CMD ["npm", "start"]	
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
-{Name: "java server page",
+	{Name: "java server page",
 		Description: "Web server builtin",
 		Details:     `All files are copied to the image and served`,
 		Template: `FROM tomcat:8.0-alpine
