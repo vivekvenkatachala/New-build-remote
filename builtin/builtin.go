@@ -159,4 +159,19 @@ ADD ./Abbott /usr/local/tomcat/webapps/abbott
 EXPOSE 8080		
 CMD ["catalina.sh", "run"]
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
+
+
+{Name: "typescript",
+Description: "typescript builtin",
+Details: `runs index.ts with --allow-net set and requires deps.ts for dependencies.
+Uses and exposes port 8080 internally.`,
+Template: `FROM node
+WORKDIR /app
+COPY . .
+RUN npm install
+EXPOSE 4000
+CMD ["npm", "run", "dev"]
+`,
+Settings: []Setting{{"perms", []string{`--allow-net`}, "Array of command line settings to grant permissions, e.g. [\"--allow-net\",\"--allow-read\"] "}},
+},
 }
