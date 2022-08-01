@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"start_build/internal"
@@ -35,6 +36,7 @@ type StartBuildInput struct {
 	BuildArgs     map[string]interface{} `json:"buildArgs"`
 	FileExtension string                 `json:"fileExtension"`
 	InternalPort  string                 `json:"internalPort"`
+	DockerFile    string                 `json:"dockerFile"`
 }
 
 func StartBuild(w http.ResponseWriter, r *http.Request) {
@@ -83,23 +85,77 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			filePath, _ := service.FindFile("extracted_file/" + input.AppId)
 
 			if filePath == "Docker file doesn't exists" {
+
 				builtInFile, _ := builtin.GetBuiltIn()
 				internalPort, _ := strconv.Atoi(input.InternalPort)
-				_, err = builtin.CreateDockerFile(int64(internalPort), builtInFile[input.SourceType], input.AppId)
-				if err != nil {
-					log.Println(err)
-					Out.Close()
-					err = service.DeletedSourceFile("extracted_file/" + input.AppId)
+				if input.DockerFile != "" {
+
+					getPath, err := builtin.FindPath("extracted_file/" + input.AppId)
+
 					if err != nil {
-						helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+						log.Println(err)
 						return
+					}
+					if !service.FileExists("extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile") {
+
+						_, err := os.Create("extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile")
+						if err != nil {
+							return
+						}
+					}
+					data := []byte(input.DockerFile)
+
+					err = ioutil.WriteFile("extracted_file/"+input.AppId+"/"+getPath+"/Dockerfile", data, 0)
+					if err != nil {
+						log.Fatal(err)
+						err = service.DeletedSourceFile("extracted_file/" + input.AppId)
+						if err != nil {
+							helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+							return
+						}
+					}
+				} else {
+					_, err = builtin.CreateDockerFile(int64(internalPort), builtInFile[input.SourceType], input.AppId)
+					if err != nil {
+						log.Println(err)
+						Out.Close()
+						err = service.DeletedSourceFile("extracted_file/" + input.AppId)
+						if err != nil {
+							helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+							return
+						}
 					}
 				}
 			}
 		}
 
 		fmt.Println("reached find file")
+
+		if input.DockerFile != "" {
+
+			getPath, err := builtin.FindPath("extracted_file/" + input.AppId)
+
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			if !service.FileExists("extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile") {
+
+				_, err := os.Create("extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile")
+				if err != nil {
+					return
+				}
+			}
+			data := []byte(input.DockerFile)
+
+			err = ioutil.WriteFile("extracted_file/"+input.AppId+"/"+getPath+"/Dockerfile", data, 0)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		filePath, err := service.FindFile("extracted_file/" + input.AppId)
+
 		if filePath == "Docker file doesn't exists" {
 			//Delete extracted file and image
 			Out.Close()
