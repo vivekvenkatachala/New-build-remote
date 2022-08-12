@@ -3,18 +3,19 @@ package buildimage
 import (
 	"context"
 	"log"
+	"strconv"
 
 	"fmt"
 	"io"
 	"os"
 
-	 
+	"start_build/docker"
+
+	"github.com/alecthomas/log4go"
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/term"
-	"start_build/docker"
-	"github.com/docker/docker/client"
-
 )
 
 type DockerClient struct {
@@ -69,6 +70,7 @@ func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, 
 
 	cli, err := docker.NewDockerClient()
 	if err != nil {
+		log4go.Error("Module: StartBuild, MethodName: NewDockerClient, Message: %s ", err.Error())
 		fmt.Println(err.Error())
 		return nil, err
 	}
@@ -76,25 +78,28 @@ func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, 
 	resp, err := cli.Client().ImageBuild(ctx, tar, opts)
 
 	if err != nil {
+		log4go.Error("Module: StartBuild, MethodName: ImageBuild, Message: %s ", err.Error())
 		fmt.Println(err.Error())
 		return nil, err
 	}
-
+	log4go.Info("Module: StartBuild, MethodName: ImageBuild, Message: Building the file as docker image" )
 	defer resp.Body.Close()
 
 	termFd, isTerm := term.GetFdInfo(os.Stderr)
 
 	if err := jsonmessage.DisplayJSONMessagesStream(resp.Body, out, termFd, isTerm, nil); err != nil {
 		fmt.Println(err.Error())
+		log4go.Error("Module: StartBuild, MethodName: DisplayJSONMessagesStream, Message: %s ", err.Error())
 		return nil, fmt.Errorf("something went wrong with file")
 	}
 
 	imgSummary, err := cli.FindImage(ctx, tag)
 	
 	if err != nil {
+		log4go.Error("Module: StartBuild, MethodName: FindImage, Message: %s ", err.Error())
 		return nil, err
 	}
-
+	log4go.Info("Module: StartBuild, MethodName: FindImage, Message: Finding Image using the tag - "+tag+" . The size of the Image - "+strconv.Itoa(int(imgSummary.Size)))
 	image := &Image{
 		ID:   imgSummary.ID,
 		Tag:  tag,
@@ -110,10 +115,11 @@ func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, 
 	err = cli.PushImage(ctx, image.Tag, outs)
 	
 	if err != nil {
+		log4go.Error("Module: StartBuild, MethodName: PushImage, Message: %s ", err.Error())
 		return nil,err
 	}
 
-
+	log4go.Info("Module: StartBuild, MethodName: PushImage, Message: Docker Image - "+image.Tag)
 	return image, nil
 }
 

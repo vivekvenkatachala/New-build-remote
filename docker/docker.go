@@ -9,12 +9,14 @@ import (
 	"regexp"
 	"strings"
 
+	"start_build/terminal"
+
+	"github.com/alecthomas/log4go"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/moby/term"
-	"start_build/terminal"
-	
+
 	dockerparser "github.com/novln/docker-parser"
 )
 
@@ -119,6 +121,7 @@ func (c *DockerClient) FindImage(ctx context.Context, imageName string) (*types.
 func (c *DockerClient) PushImage(ctx context.Context, imageName string, out io.Writer) error {
 	resp, err := c.docker.ImagePush(ctx, imageName, types.ImagePushOptions{RegistryAuth: c.registryAuth})
 	if err != nil {
+		log4go.Error("Module: StartBuild, MethodName: PushImage, Message: %s ", err.Error())
 		return err
 	}
 	defer resp.Close()
