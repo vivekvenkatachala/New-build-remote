@@ -174,4 +174,11 @@ CMD ["npm", "run", "dev"]
 `,
 Settings: []Setting{{"perms", []string{`--allow-net`}, "Array of command line settings to grant permissions, e.g. [\"--allow-net\",\"--allow-read\"] "}},
 },
+
+{Name: "mysql",
+		Description: "MySql",
+		Details:     `All files are copied to the image and served, It will work with AngularJS`,
+		Template: `
+
+`, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 }
