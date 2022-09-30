@@ -177,7 +177,14 @@ Settings: []Setting{{"perms", []string{`--allow-net`}, "Array of command line se
 
 {Name: "mysql",
 		Description: "MySql",
-		Details:     `All files are copied to the image and served, It will work with AngularJS`,
+		Details:     ``,
+		Template: `
+
+`, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
+
+{Name: "postgres",
+		Description: "Postgres",
+		Details:     ``,
 		Template: `
 
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
