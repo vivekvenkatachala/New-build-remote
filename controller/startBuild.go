@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"start_build/internal"
 	"strconv"
 
@@ -48,7 +50,6 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 	var ArchiveFile io.Reader
 	var Out os.File
 
-	
 	_, err := internal.ValidateFileExtension(input.FileExtension)
 	if err != nil {
 		log4go.Error("Module: StartBuild, MethodName: ValidateFileExtension, Message: %s ", err.Error())
@@ -56,7 +57,6 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log4go.Info("Module: StartBuild, MethodName: ValidateFileExtension, Message: validating the file extension. The file extension is %s", input.FileExtension)
-
 
 	if input.FileExtension == "zip" || input.FileExtension == "tar" || input.FileExtension == "tar.gz" {
 		out, err := os.Create(input.AppId)
@@ -74,8 +74,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 			return
 		}
-		log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: Pulled the %s file from the S3 with the source url - %s ",input.FileExtension, input.SourceUrl )
-		
+		log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: Pulled the %s file from the S3 with the source url - %s ", input.FileExtension, input.SourceUrl)
 
 		archiveFile := bytes.NewReader(reader)
 
@@ -87,29 +86,62 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		case "tar":
 			extract.Tar(context.Background(), archiveFile, "extracted_file/"+input.AppId, nil)
 		}
-		log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: The %s file is Extracted to the path extracted_file/ %s ",input.FileExtension, input.AppId )
-		//The input.fileextnsion file is Extracted to the path "extracted_file/"+input.AppId 
+		log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: The %s file is Extracted to the path extracted_file/ %s ", input.FileExtension, input.AppId)
+		//The input.fileextnsion file is Extracted to the path "extracted_file/"+input.AppId
+		// ---------------------------------------------------------------------------------------
+		var fileName string
+		files, err := ioutil.ReadDir("extracted_file/" + input.AppId)
+		if err != nil {
+			return
+		}
+		for _, i := range files {
+			fileName = i.Name()
+		}
+
+		path := filepath.Join("extracted_file/", input.AppId, fileName, "sonarscan.sh")
+		_, err = os.Create(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		data, err := ioutil.ReadFile("dotnet.sh")
+		if err != nil {
+			return
+		}
+		data1 := []byte(data)
+
+		err = ioutil.WriteFile(path, data1, 0644)
+		if err != nil {
+			return
+		}
+
+		_, err = exec.Command("bash", "extracted_file/"+input.AppId+"/WebApplication4/sonarscan.sh").Output()
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// ---------------------------------------------------------------------------------------
 
 		if input.BuildType == "Builtin" {
 
 			fmt.Println("inside builtin")
 
 			filePath, _ := service.FindFile("extracted_file/" + input.AppId)
-			log4go.Info("Module: StartBuild, MethodName: FindFile, Message: Searching for docker file in the Extracted file - extracted_file/%s ", input.AppId )
+			log4go.Info("Module: StartBuild, MethodName: FindFile, Message: Searching for docker file in the Extracted file - extracted_file/%s ", input.AppId)
 			//Searching for docker file in the Extracted file - extracted_file/" + input.AppId
 
 			if filePath == "Docker file doesn't exists" {
-				log4go.Info("Module: StartBuild, Message: Docker file doesn't exists in the Extracted file - extracted_file/%s ", input.AppId )
+				log4go.Info("Module: StartBuild, Message: Docker file doesn't exists in the Extracted file - extracted_file/%s ", input.AppId)
 				//Docker file doesn't exists in the Extracted file - extracted_file/" + input.AppId
 
 				builtInFile, _ := builtin.GetBuiltIn()
-				log4go.Info("Module: StartBuild, MethodName: GetBuiltIn, Message: Docker file doesn't exists in the file. So, Fetching all the available Builtins " )
+				log4go.Info("Module: StartBuild, MethodName: GetBuiltIn, Message: Docker file doesn't exists in the file. So, Fetching all the available Builtins ")
 				//Fetching all the default Builtins
 
 				internalPort, _ := strconv.Atoi(input.InternalPort)
-				
+
 				if input.DockerFile != "" {
-					log4go.Info("Module: StartBuild, Message: User added the Dockerfile on the fly, Dockerfile: ", input.DockerFile )
+					log4go.Info("Module: StartBuild, Message: User added the Dockerfile on the fly, Dockerfile: ", input.DockerFile)
 					getPath, err := builtin.FindPath("extracted_file/" + input.AppId)
 
 					if err != nil {
@@ -118,13 +150,13 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					if !service.FileExists("extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile") {
-						log4go.Info("Module: StartBuild, MethodName: FileExists, Message: Searching for Dockerfile in the extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile"+". To re-write the dockerfile with the updated dockerfile, which is added on the fly" )
+						log4go.Info("Module: StartBuild, MethodName: FileExists, Message: Searching for Dockerfile in the extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile" + ". To re-write the dockerfile with the updated dockerfile, which is added on the fly")
 						_, err := os.Create("extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile")
 						if err != nil {
 							log4go.Error("Module: StartBuild, MethodName: Create, Message: %s ", err.Error())
 							return
 						}
-						log4go.Info("Module: StartBuild, MethodName: Create, Message: Docker file doesn't exists in the Extracted file - " + input.AppId + "/" + getPath + "/Dockerfile"+". Creating a Docker file to add the dockerfile, which is added on the fly")
+						log4go.Info("Module: StartBuild, MethodName: Create, Message: Docker file doesn't exists in the Extracted file - " + input.AppId + "/" + getPath + "/Dockerfile" + ". Creating a Docker file to add the dockerfile, which is added on the fly")
 					}
 					data := []byte(input.DockerFile)
 
@@ -138,9 +170,9 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 							helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 							return
 						}
-						log4go.Info("Module: StartBuild, MethodName: DeletedSourceFile, Message: Error occurred while writing the dockerfile. So, Deleting the Source file from the path : extracted_file/" +input.AppId)
+						log4go.Info("Module: StartBuild, MethodName: DeletedSourceFile, Message: Error occurred while writing the dockerfile. So, Deleting the Source file from the path : extracted_file/" + input.AppId)
 					}
-					log4go.Info("Module: StartBuild, MethodName: WriteFile, Message: Adding the Docker file content to the dockerfile, which is added on the fly. Dockerfile: "+input.DockerFile)
+					log4go.Info("Module: StartBuild, MethodName: WriteFile, Message: Adding the Docker file content to the dockerfile, which is added on the fly. Dockerfile: " + input.DockerFile)
 				} else {
 					_, err = builtin.CreateDockerFile(int64(internalPort), builtInFile[input.SourceType], input.AppId)
 					if err != nil {
@@ -163,7 +195,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("reached find file")
 
 		if input.DockerFile != "" {
-			log4go.Info("Module: StartBuild, Message: User added the Dockerfile on the fly, Dockerfile: ", input.DockerFile )
+			log4go.Info("Module: StartBuild, Message: User added the Dockerfile on the fly, Dockerfile: ", input.DockerFile)
 			getPath, err := builtin.FindPath("extracted_file/" + input.AppId)
 
 			if err != nil {
@@ -172,13 +204,13 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			if !service.FileExists("extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile") {
-				log4go.Info("Module: StartBuild, MethodName: FileExists, Message: Searching for Dockerfile in the extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile"+". To re-write the dockerfile with the updated dockerfile, which is added on the fly" )
+				log4go.Info("Module: StartBuild, MethodName: FileExists, Message: Searching for Dockerfile in the extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile" + ". To re-write the dockerfile with the updated dockerfile, which is added on the fly")
 				_, err := os.Create("extracted_file/" + input.AppId + "/" + getPath + "/Dockerfile")
 				if err != nil {
 					log4go.Error("Module: StartBuild, MethodName: Create, Message: %s ", err.Error())
 					return
 				}
-				log4go.Info("Module: StartBuild, MethodName: Create, Message: Docker file doesn't exists in the Extracted file - " + input.AppId + "/" + getPath + "/Dockerfile"+". Creating a Docker file to add the dockerfile, which is added on the fly")
+				log4go.Info("Module: StartBuild, MethodName: Create, Message: Docker file doesn't exists in the Extracted file - " + input.AppId + "/" + getPath + "/Dockerfile" + ". Creating a Docker file to add the dockerfile, which is added on the fly")
 			}
 			data := []byte(input.DockerFile)
 
@@ -187,14 +219,14 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 				log4go.Error("Module: StartBuild, MethodName: WriteFile, Message: %s ", err.Error())
 				log.Fatal(err)
 				err = service.DeletedSourceFile("extracted_file/" + input.AppId)
-						if err != nil {
-							log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: %s ", err.Error())
-							helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
-							return
-						}
-						log4go.Info("Module: StartBuild, MethodName: DeletedSourceFile, Message: Error occurred while writing the dockerfile. So, Deleting the Source file from the path : extracted_file/" +input.AppId)
+				if err != nil {
+					log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: %s ", err.Error())
+					helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+					return
+				}
+				log4go.Info("Module: StartBuild, MethodName: DeletedSourceFile, Message: Error occurred while writing the dockerfile. So, Deleting the Source file from the path : extracted_file/" + input.AppId)
 			}
-			log4go.Info("Module: StartBuild, MethodName: WriteFile, Message: Adding the Docker file content to the dockerfile, which is added on the fly. Dockerfile: "+input.DockerFile)
+			log4go.Info("Module: StartBuild, MethodName: WriteFile, Message: Adding the Docker file content to the dockerfile, which is added on the fly. Dockerfile: " + input.DockerFile)
 		}
 
 		filePath, err := service.FindFile("extracted_file/" + input.AppId)
@@ -208,7 +240,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 				return
 			}
-			
+
 			log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: Docker file doesn't exists. Deleting the extracted source file - extracted_file/" + input.AppId)
 			helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": filePath})
 			return
@@ -223,7 +255,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 				return
 			}
-			
+
 			helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 			return
 		}
@@ -239,7 +271,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		defer buildContext.Close()
 
 		buildContext.AddSourceFolder(filePath, "")
-		log4go.Info("Module: StartBuild, MethodName: AddSourceFolder, Message: Adding file to the source folder -" +filePath)
+		log4go.Info("Module: StartBuild, MethodName: AddSourceFolder, Message: Adding file to the source folder -" + filePath)
 		archive, err := buildContext.Archive()
 		if err != nil {
 			log4go.Error("Module: StartBuild, MethodName: Archive, Message: %s ", err.Error())
