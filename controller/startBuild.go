@@ -9,8 +9,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"start_build/internal"
 	"strconv"
 
@@ -89,36 +87,36 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: The %s file is Extracted to the path extracted_file/ %s ", input.FileExtension, input.AppId)
 		//The input.fileextnsion file is Extracted to the path "extracted_file/"+input.AppId
 		// ---------------------------------------------------------------------------------------
-		var fileName string
-		files, err := ioutil.ReadDir("extracted_file/" + input.AppId)
-		if err != nil {
-			return
-		}
-		for _, i := range files {
-			fileName = i.Name()
-		}
+		// var fileName string
+		// files, err := ioutil.ReadDir("extracted_file/" + input.AppId)
+		// if err != nil {
+		// 	return
+		// }
+		// for _, i := range files {
+		// 	fileName = i.Name()
+		// }
 
-		path := filepath.Join("extracted_file/", input.AppId, fileName, "sonarscan.sh")
-		_, err = os.Create(path)
-		if err != nil {
-			log.Fatal(err)
-		}
-		data, err := ioutil.ReadFile("dotnet.sh")
-		if err != nil {
-			return
-		}
-		data1 := []byte(data)
+		// path := filepath.Join("extracted_file/", input.AppId, fileName, "sonarscan.sh")
+		// _, err = os.Create(path)
+		// if err != nil {
+		// 	log.Fatal(err)
+		// }
+		// data, err := ioutil.ReadFile("dotnet.sh")
+		// if err != nil {
+		// 	return
+		// }
+		// data1 := []byte(data)
 
-		err = ioutil.WriteFile(path, data1, 0644)
-		if err != nil {
-			return
-		}
+		// err = ioutil.WriteFile(path, data1, 0644)
+		// if err != nil {
+		// 	return
+		// }
 
-		_, err = exec.Command("bash", "extracted_file/"+input.AppId+"/WebApplication4/sonarscan.sh").Output()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+		// _, err = exec.Command("bash", "extracted_file/"+input.AppId+"/WebApplication4/sonarscan.sh").Output()
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+		// }
 
 		// ---------------------------------------------------------------------------------------
 
