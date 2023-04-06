@@ -160,32 +160,46 @@ EXPOSE 8080
 CMD ["catalina.sh", "run"]
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
-
-{Name: "typescript",
-Description: "typescript builtin",
-Details: `runs index.ts with --allow-net set and requires deps.ts for dependencies.
+	{Name: "typescript",
+		Description: "typescript builtin",
+		Details: `runs index.ts with --allow-net set and requires deps.ts for dependencies.
 Uses and exposes port 8080 internally.`,
-Template: `FROM node
+		Template: `FROM node
 WORKDIR /app
 COPY . .
 RUN npm install
 EXPOSE 4000
 CMD ["npm", "run", "dev"]
 `,
-Settings: []Setting{{"perms", []string{`--allow-net`}, "Array of command line settings to grant permissions, e.g. [\"--allow-net\",\"--allow-read\"] "}},
-},
+		Settings: []Setting{{"perms", []string{`--allow-net`}, "Array of command line settings to grant permissions, e.g. [\"--allow-net\",\"--allow-read\"] "}},
+	},
 
-{Name: "mysql",
+	{Name: "mysql",
 		Description: "MySql",
 		Details:     ``,
 		Template: `
 
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
-{Name: "postgres",
+	{Name: "postgres",
 		Description: "Postgres",
 		Details:     ``,
 		Template: `
 
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
+	{Name: "unity",
+		Description: "unity builtin",
+		Details: `runs index.ts with --allow-net set and requires deps.ts for dependencies.
+Uses and exposes port 8080 internally.`,
+		Template: `FROM nginx:alpine
+
+WORKDIR /etc/nginx/conf.d
+COPY webgl.conf default.conf
+
+WORKDIR /webgl
+COPY webgl/ . 
+EXPOSE 8080
+`,
+		Settings: []Setting{{"perms", []string{`--allow-net`}, "Array of command line settings to grant permissions, e.g. [\"--allow-net\",\"--allow-read\"] "}},
+	},
 }
