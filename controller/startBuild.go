@@ -9,8 +9,10 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"start_build/internal"
 	"strconv"
+	"strings"
 
 	"start_build/builtin"
 
@@ -29,15 +31,16 @@ import (
 )
 
 type StartBuildInput struct {
-	AppId         string                 `json:"appId"`
-	SourceUrl     string                 `json:"sourceUrl"`
-	SourceType    string                 `json:"sourceType"`
-	BuildType     string                 `josn:"buildType"`
-	ImageTag      string                 `json:"imageTag"`
-	BuildArgs     map[string]interface{} `json:"buildArgs"`
-	FileExtension string                 `json:"fileExtension"`
-	InternalPort  string                 `json:"internalPort"`
-	DockerFile    string                 `json:"dockerFile"`
+	AppId          string                 `json:"appId"`
+	SourceUrl      string                 `json:"sourceUrl"`
+	SourceType     string                 `json:"sourceType"`
+	BuildType      string                 `josn:"buildType"`
+	ImageTag       string                 `json:"imageTag"`
+	BuildArgs      map[string]interface{} `json:"buildArgs"`
+	FileExtension  string                 `json:"fileExtension"`
+	InternalPort   string                 `json:"internalPort"`
+	DockerFile     string                 `json:"dockerFile"`
+	DockerFilePath string                 `json:"dockerFilePath"`
 }
 
 func StartBuild(w http.ResponseWriter, r *http.Request) {
@@ -227,21 +230,74 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			log4go.Info("Module: StartBuild, MethodName: WriteFile, Message: Adding the Docker file content to the dockerfile, which is added on the fly. Dockerfile: " + input.DockerFile)
 		}
 
-		filePath, err := service.FindFile("extracted_file/" + input.AppId)
+		var filePath string
+		if input.DockerFilePath == "" {
+			filePath, err = service.FindFile("extracted_file/" + input.AppId)
+		} else {
+			input.DockerFilePath = strings.TrimLeft(input.DockerFilePath, "/")
+			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, "/Dockerfile")
+			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, "/dockerfile")
 
-		if filePath == "Docker file doesn't exists" {
-			//Delete extracted file and image
-			Out.Close()
-			err = service.DeletedSourceFile("extracted_file/" + input.AppId)
-			if err != nil {
-				log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: %s ", err.Error())
-				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+			filePath = "extracted_file/" + input.AppId + "/" + input.DockerFilePath
+
+			filePathDock := "extracted_file/" + input.AppId + "/" + input.DockerFilePath + "/Dockerfile"
+
+			if _, err := os.Stat(filePathDock); os.IsNotExist(err) {
+				filePath = "Docker file doesn't exists"
+				Out.Close()
+				err = service.DeletedSourceFile("extracted_file/" + input.AppId)
+				if err != nil {
+					log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: %s ", err.Error())
+					helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+					return
+				}
+
+				log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: Docker file doesn't exists. Deleting the extracted source file - extracted_file/" + input.AppId)
+				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": filePath})
 				return
 			}
 
-			log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: Docker file doesn't exists. Deleting the extracted source file - extracted_file/" + input.AppId)
-			helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": filePath})
-			return
+			// filePath, err = service.FindFile("extracted_file/" + input.AppId + "/" + input.DockerFilePath)
+
+		}
+
+		var count []string
+		root := "./" + filePath // replace with the root directory of your project
+		err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.Name() == "Dockerfile" {
+				count = append(count, path)
+			}
+			return nil
+		})
+		var filePath1 string
+		for _, yo := range count {
+			fmt.Println(yo)
+			filePath1 = yo
+		}
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		filePath1 = strings.ReplaceAll(filePath1, "\\", "/")
+		fmt.Println(filePath1)
+		if filePath1 == "" {
+			if filePath == "Docker file doesn't exists" {
+				//Delete extracted file and image
+				Out.Close()
+				err = service.DeletedSourceFile("extracted_file/" + input.AppId)
+				if err != nil {
+					log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: %s ", err.Error())
+					helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+					return
+				}
+
+				log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: Docker file doesn't exists. Deleting the extracted source file - extracted_file/" + input.AppId)
+				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": filePath})
+				return
+			}
 		}
 		if err != nil {
 			log.Println(err)
