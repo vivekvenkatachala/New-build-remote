@@ -1,6 +1,7 @@
 package buildimage
 
 import (
+	"bufio"
 	"context"
 	"log"
 	"strconv"
@@ -61,7 +62,7 @@ func authConfigs() map[string]types.AuthConfig {
 	return authConfigs
 }
 
-func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, buildArgs map[string]interface{}) (*Image, error) {
+func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, buildArgs map[string]interface{}) (*Image,  []string ,error) {
 	opts := types.ImageBuildOptions{
 		BuildArgs:   normalizeBuildArgs(buildArgs),
 		AuthConfigs: authConfigs(),
@@ -72,17 +73,31 @@ func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, 
 	if err != nil {
 		log4go.Error("Module: StartBuild, MethodName: NewDockerClient, Message: %s ", err.Error())
 		fmt.Println(err.Error())
-		return nil, err
+		return nil, []string{}, err
 	}
+	var buildLogs []string
+
+	buildLogs = []string{"Checking the uploaded file format...","Extracting the file..."}
 
 	resp, err := cli.Client().ImageBuild(ctx, tar, opts)
 
 	if err != nil {
+		fmt.Println("Unable to retrieve build logs.")
 		log4go.Error("Module: StartBuild, MethodName: ImageBuild, Message: %s ", err.Error())
 		fmt.Println(err.Error())
-		return nil, err
+		return nil, []string{}, err
 	}
-	log4go.Info("Module: StartBuild, MethodName: ImageBuild, Message: Building the file as docker image" )
+
+	scanner := bufio.NewScanner(resp.Body)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if line != "{\"stream\":\"\\n\"}" {
+			fmt.Println(line)
+			buildLogs = append(buildLogs, line)
+		}
+	}
+
+	log4go.Info("Module: StartBuild, MethodName: ImageBuild, Message: Building the file as docker image")
 	defer resp.Body.Close()
 
 	termFd, isTerm := term.GetFdInfo(os.Stderr)
@@ -90,46 +105,46 @@ func  BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, 
 	if err := jsonmessage.DisplayJSONMessagesStream(resp.Body, out, termFd, isTerm, nil); err != nil {
 		fmt.Println(err.Error())
 		log4go.Error("Module: StartBuild, MethodName: DisplayJSONMessagesStream, Message: %s ", err.Error())
-		return nil, fmt.Errorf("something went wrong with file")
+		return nil, []string{}, fmt.Errorf("something went wrong with file")
 	}
 
 	imgSummary, err := cli.FindImage(ctx, tag)
-	
+
 	if err != nil {
 		log4go.Error("Module: StartBuild, MethodName: FindImage, Message: %s ", err.Error())
-		return nil, err
+		return nil, []string{}, err
 	}
-	log4go.Info("Module: StartBuild, MethodName: FindImage, Message: Finding Image using the tag - "+tag+" . The size of the Image - "+strconv.Itoa(int(imgSummary.Size)))
+	log4go.Info("Module: StartBuild, MethodName: FindImage, Message: Finding Image using the tag - " + tag + " . The size of the Image - " + strconv.Itoa(int(imgSummary.Size)))
 	image := &Image{
-		ID:   imgSummary.ID,
-		Tag:  tag,
+		ID:  imgSummary.ID,
+		Tag: tag,
 
 		Size: imgSummary.Size,
 	}
 
 	outs, err := os.Create("debugImage")
 	if err != nil {
-		return nil, err
+		return nil, []string{}, err
 	}
 	outs.Close()
 	err = cli.PushImage(ctx, image.Tag, outs)
-	
+
 	if err != nil {
 		log4go.Error("Module: StartBuild, MethodName: PushImage, Message: %s ", err.Error())
-		return nil,err
+		return nil, []string{}, err
 	}
 
-	log4go.Info("Module: StartBuild, MethodName: PushImage, Message: Docker Image - "+image.Tag)
-	return image, nil
+	log4go.Info("Module: StartBuild, MethodName: PushImage, Message: Docker Image - " + image.Tag)
+	return image, buildLogs, nil
 }
 
-func RemoveImage(imageID string)(error){
+func RemoveImage(imageID string) error {
 	cli, err := docker.NewDockerClient()
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	_, err = cli.Client().ImageRemove(context.Background(), imageID,  types.ImageRemoveOptions{Force: true, PruneChildren: true})
+	_, err = cli.Client().ImageRemove(context.Background(), imageID, types.ImageRemoveOptions{Force: true, PruneChildren: true})
 	if err != nil {
 		log.Println(err)
 		return err

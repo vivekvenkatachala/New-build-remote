@@ -42,6 +42,10 @@ type StartBuildInput struct {
 	DockerFile     string                 `json:"dockerFile"`
 	DockerFilePath string                 `json:"dockerFilePath"`
 }
+type ResponseData struct {
+    ImageName []byte   `json:"imageName"`
+    BuildLogs     []string `json:"buildLogs"`
+}
 
 func StartBuild(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", "application/json")
@@ -369,7 +373,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		}
 		ArchiveFile = bytes.NewReader(reader)
 	}
-	img, err := buildimage.BuildImage(context.TODO(), ArchiveFile, input.ImageTag, &Out, input.BuildArgs)
+	img, buildLogs, err := buildimage.BuildImage(context.TODO(), ArchiveFile, input.ImageTag, &Out, input.BuildArgs)
 
 	if err != nil {
 		Out.Close()
@@ -379,5 +383,18 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = os.Remove(input.AppId)
-	w.Write([]byte(img.Tag))
+
+	responseData := ResponseData{
+		ImageName: []byte(img.Tag),
+		BuildLogs:     buildLogs,
+	}
+	
+	// Serialize the response data as JSON
+	responseDataJSON, err := json.Marshal(responseData)
+	if err != nil {
+		http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(responseDataJSON)
 }
