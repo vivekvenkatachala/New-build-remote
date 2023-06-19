@@ -41,10 +41,11 @@ type StartBuildInput struct {
 	InternalPort   string                 `json:"internalPort"`
 	DockerFile     string                 `json:"dockerFile"`
 	DockerFilePath string                 `json:"dockerFilePath"`
+	SecretPAT      string                 `json:"secretPAT"`
 }
 type ResponseData struct {
-    ImageName []byte   `json:"imageName"`
-    BuildLogs     []string `json:"buildLogs"`
+	ImageName []byte   `json:"imageName"`
+	BuildLogs []string `json:"buildLogs"`
 }
 
 func StartBuild(w http.ResponseWriter, r *http.Request) {
@@ -72,15 +73,30 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		}
 		defer out.Close()
 		Out = *out
-		reader, err := service.GetFileFromS3(input.SourceUrl)
-		if err != nil {
-			log.Println(err)
-			log4go.Error("Module: StartBuild, MethodName: GetFileFromS3, Message: %s ", err.Error())
-			helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
-			return
-		}
-		log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: Pulled the %s file from the S3 with the source url - %s ", input.FileExtension, input.SourceUrl)
+		var reader []byte
 
+		if input.SecretPAT != "" {
+
+			reader, err = service.GetFileFromPrivateRepo(input.SourceUrl, input.SecretPAT)
+			if err != nil {
+				log.Println(err)
+				log4go.Error("Module: StartBuild, MethodName: GetFileFromS3, Message: %s ", err.Error())
+				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+				return
+			}
+			log4go.Info("Module: StartBuild, MethodName: GetFileFromPrivateRepo, Message: Pulled the %s file from the github repo with the source url - %s ", input.FileExtension, input.SourceUrl)
+
+		} else {
+
+			reader, err = service.GetFileFromS3(input.SourceUrl)
+			if err != nil {
+				log.Println(err)
+				log4go.Error("Module: StartBuild, MethodName: GetFileFromS3, Message: %s ", err.Error())
+				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+				return
+			}
+			log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: Pulled the %s file from the S3 with the source url - %s ", input.FileExtension, input.SourceUrl)
+		}
 		archiveFile := bytes.NewReader(reader)
 
 		switch input.FileExtension {
@@ -386,9 +402,9 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 
 	responseData := ResponseData{
 		ImageName: []byte(img.Tag),
-		BuildLogs:     buildLogs,
+		BuildLogs: buildLogs,
 	}
-	
+
 	// Serialize the response data as JSON
 	responseDataJSON, err := json.Marshal(responseData)
 	if err != nil {
