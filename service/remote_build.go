@@ -23,6 +23,28 @@ func GetFileFromS3(SourceURL string) ([]byte, error) {
 	return reader, nil
 }
 
+func GetFileFromPrivateRepo(SourceURL, patToken string) ([]byte, error) {
+	resp, err := http.NewRequest("GET", SourceURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp.Header.Add("Accept", "application/json")
+	resp.Header.Add("Authorization", "token "+patToken)
+
+	clt := http.Client{}
+
+	res, err := clt.Do(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	reader, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return reader, nil
+}
+
 func FindFile(path string) (string, error) {
 
 	f, err := os.Open(path)
