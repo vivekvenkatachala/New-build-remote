@@ -253,6 +253,19 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		var filePath string
 		if input.DockerFilePath == "" {
 			filePath, err = service.FindFile("extracted_file/" + input.AppId)
+			if err != nil {
+				Out.Close()
+				err = service.DeletedSourceFile("extracted_file/" + input.AppId)
+				if err != nil {
+					log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: %s ", err.Error())
+					helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
+					return
+				}
+
+				log4go.Error("Module: StartBuild, MethodName: DeletedSourceFile, Message: Docker file doesn't exists. Deleting the extracted source file - extracted_file/" + input.AppId)
+				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": "Docker file doesn't exists. Please check the given branch is correct"})
+				return
+			}
 		} else {
 			input.DockerFilePath = strings.TrimLeft(input.DockerFilePath, "/")
 			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, "/Dockerfile")
