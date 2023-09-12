@@ -85,7 +85,10 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			log4go.Info("Module: StartBuild, MethodName: GetFileFromPrivateRepo, Message: Pulled the %s file from the github repo with the source url - %s ", input.FileExtension, input.SourceUrl)
-
+			if string(reader) == "{\"error\":\"Not Found\"}" {
+				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": "Provide the correct PAT details or check whether the selected PAT is not expired"})
+				return
+			}
 		} else {
 
 			reader, err = service.GetFileFromS3(input.SourceUrl)
