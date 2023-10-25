@@ -75,13 +75,14 @@ Uses and exposes port 8080 internally.
 	{Name: "static react",
 		Description: "Web server builtin",
 		Details:     `All files are copied to the image and served, It will work with ReactJS`,
-		Template: `FROM node:alpine
-WORKDIR /usr/src/app
-COPY package*.json ./
-RUN npm install
-COPY . .
-EXPOSE 3000
-CMD ["npm", "start"]
+		Template: `FROM node:14-alpine
+		WORKDIR /app
+		COPY package*.json ./
+		RUN npm install
+		COPY . .
+		RUN npm run build
+		EXPOSE 3000
+		CMD [ "npm", "start" ]
 `, Settings: []Setting{{"httpsonly", false, "Enable http to https promotion"}, {"log", false, "Enable basic logging"}}},
 
 	{Name: "static angular",
