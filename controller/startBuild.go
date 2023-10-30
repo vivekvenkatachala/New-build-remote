@@ -55,6 +55,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 
 	var ArchiveFile io.Reader
 	var Out os.File
+	var dockerFileName string
 
 	_, err := internal.ValidateFileExtension(input.FileExtension)
 	if err != nil {
@@ -270,13 +271,17 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
+			lastIndex := strings.LastIndex(input.DockerFilePath, "/")
+			dockerFileName = input.DockerFilePath[lastIndex+1:]
+
 			input.DockerFilePath = strings.TrimLeft(input.DockerFilePath, "/")
 			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, "/Dockerfile")
 			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, "/dockerfile")
+			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, dockerFileName)
 
 			filePath = "extracted_file/" + input.AppId + "/" + input.DockerFilePath
 
-			filePathDock := "extracted_file/" + input.AppId + "/" + input.DockerFilePath + "/Dockerfile"
+			filePathDock := "extracted_file/" + input.AppId + "/" + input.DockerFilePath + "" + dockerFileName
 
 			if _, err := os.Stat(filePathDock); os.IsNotExist(err) {
 				filePath = "Docker file doesn't exists"
@@ -303,7 +308,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return err
 			}
-			if info.Name() == "Dockerfile" {
+			if info.Name() == dockerFileName {
 				count = append(count, path)
 			}
 			return nil
@@ -405,7 +410,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		}
 		ArchiveFile = bytes.NewReader(reader)
 	}
-	img, buildLogs, err := buildimage.BuildImage(context.TODO(), ArchiveFile, input.ImageTag, &Out, input.BuildArgs)
+	img, buildLogs, err := buildimage.BuildImage(context.TODO(), ArchiveFile, input.ImageTag, &Out, input.BuildArgs, dockerFileName)
 
 	if err != nil {
 		Out.Close()

@@ -62,11 +62,12 @@ func authConfigs() map[string]types.AuthConfig {
 	return authConfigs
 }
 
-func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, buildArgs map[string]interface{}) (*Image,  []string ,error) {
+func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, buildArgs map[string]interface{}, dockerFileName string) (*Image, []string, error) {
 	opts := types.ImageBuildOptions{
 		BuildArgs:   normalizeBuildArgs(buildArgs),
 		AuthConfigs: authConfigs(),
 		Tags:        []string{tag},
+		Dockerfile:  dockerFileName,
 	}
 
 	cli, err := docker.NewDockerClient()
@@ -77,7 +78,7 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 	}
 	var buildLogs []string
 
-	buildLogs = []string{"Checking the uploaded file format...","Extracting the file..."}
+	buildLogs = []string{"Checking the uploaded file format...", "Extracting the file..."}
 
 	resp, err := cli.Client().ImageBuild(ctx, tar, opts)
 
