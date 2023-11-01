@@ -301,6 +301,9 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			// filePath, err = service.FindFile("extracted_file/" + input.AppId + "/" + input.DockerFilePath)
 
 		}
+		if dockerFileName == ""{
+			dockerFileName = "Dockerfile"
+		}
 
 		var count []string
 		root := "./" + filePath // replace with the root directory of your project
