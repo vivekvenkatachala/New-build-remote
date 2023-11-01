@@ -55,6 +55,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 
 	var ArchiveFile io.Reader
 	var Out os.File
+	var dockerFileName string
 
 	_, err := internal.ValidateFileExtension(input.FileExtension)
 	if err != nil {
@@ -85,7 +86,10 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			log4go.Info("Module: StartBuild, MethodName: GetFileFromPrivateRepo, Message: Pulled the %s file from the github repo with the source url - %s ", input.FileExtension, input.SourceUrl)
-
+			if string(reader) == "{\"error\":\"Not Found\"}" {
+				helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": "Provide the correct PAT details or check whether the selected PAT is not expired"})
+				return
+			}
 		} else {
 
 			reader, err = service.GetFileFromS3(input.SourceUrl)
@@ -267,13 +271,17 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		} else {
+			lastIndex := strings.LastIndex(input.DockerFilePath, "/")
+			dockerFileName = input.DockerFilePath[lastIndex+1:]
+
 			input.DockerFilePath = strings.TrimLeft(input.DockerFilePath, "/")
 			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, "/Dockerfile")
 			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, "/dockerfile")
+			input.DockerFilePath = strings.TrimSuffix(input.DockerFilePath, dockerFileName)
 
 			filePath = "extracted_file/" + input.AppId + "/" + input.DockerFilePath
 
-			filePathDock := "extracted_file/" + input.AppId + "/" + input.DockerFilePath + "/Dockerfile"
+			filePathDock := "extracted_file/" + input.AppId + "/" + input.DockerFilePath + "" + dockerFileName
 
 			if _, err := os.Stat(filePathDock); os.IsNotExist(err) {
 				filePath = "Docker file doesn't exists"
@@ -293,6 +301,9 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			// filePath, err = service.FindFile("extracted_file/" + input.AppId + "/" + input.DockerFilePath)
 
 		}
+		if dockerFileName == ""{
+			dockerFileName = "Dockerfile"
+		}
 
 		var count []string
 		root := "./" + filePath // replace with the root directory of your project
@@ -300,7 +311,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				return err
 			}
-			if info.Name() == "Dockerfile" {
+			if info.Name() == dockerFileName {
 				count = append(count, path)
 			}
 			return nil
@@ -402,7 +413,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		}
 		ArchiveFile = bytes.NewReader(reader)
 	}
-	img, buildLogs, err := buildimage.BuildImage(context.TODO(), ArchiveFile, input.ImageTag, &Out, input.BuildArgs)
+	img, buildLogs, err := buildimage.BuildImage(context.TODO(), ArchiveFile, input.ImageTag, &Out, input.BuildArgs, dockerFileName)
 
 	if err != nil {
 		Out.Close()
