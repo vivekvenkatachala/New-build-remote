@@ -56,6 +56,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 	var ArchiveFile io.Reader
 	var Out os.File
 	var dockerFileName string
+	fileExtensionChanged:
 
 	_, err := internal.ValidateFileExtension(input.FileExtension)
 	if err != nil {
@@ -102,10 +103,15 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: Pulled the %s file from the S3 with the source url - %s ", input.FileExtension, input.SourceUrl)
 		}
 		archiveFile := bytes.NewReader(reader)
-
+	
 		switch input.FileExtension {
 		case "zip":
 			extract.Zip(context.Background(), archiveFile, "extracted_file/"+input.AppId, nil)
+			isEmpty, _ := isFolderEmpty("extracted_file")
+			if isEmpty {
+				input.FileExtension = "tar.gz"
+				goto fileExtensionChanged
+			}
 		case "tar.gz":
 			extract.Gz(context.Background(), archiveFile, "extracted_file/"+input.AppId, nil)
 		case "tar":
@@ -301,7 +307,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			// filePath, err = service.FindFile("extracted_file/" + input.AppId + "/" + input.DockerFilePath)
 
 		}
-		if dockerFileName == ""{
+		if dockerFileName == "" {
 			dockerFileName = "Dockerfile"
 		}
 
@@ -437,4 +443,12 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Write(responseDataJSON)
+}
+
+func isFolderEmpty(folderPath string) (bool, error) {
+	dir, err := os.ReadDir(folderPath)
+	if err != nil {
+		return false, err
+	}
+	return len(dir) == 0, nil
 }
