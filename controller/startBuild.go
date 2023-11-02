@@ -56,7 +56,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 	var ArchiveFile io.Reader
 	var Out os.File
 	var dockerFileName string
-	fileExtensionChanged:
+fileExtensionChanged:
 
 	_, err := internal.ValidateFileExtension(input.FileExtension)
 	if err != nil {
@@ -103,7 +103,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 			log4go.Info("Module: StartBuild, MethodName: GetFileFromS3, Message: Pulled the %s file from the S3 with the source url - %s ", input.FileExtension, input.SourceUrl)
 		}
 		archiveFile := bytes.NewReader(reader)
-	
+
 		switch input.FileExtension {
 		case "zip":
 			extract.Zip(context.Background(), archiveFile, "extracted_file/"+input.AppId, nil)
@@ -428,6 +428,8 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		helper.RespondwithJSON(w, http.StatusBadRequest, map[string]string{"message": err.Error()})
 		return
 	}
+	fmt.Println("BuildImage Completed--------------------------------------------------------", img)
+
 	_ = os.Remove(input.AppId)
 
 	responseData := ResponseData{
@@ -441,6 +443,7 @@ func StartBuild(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
 		return
 	}
+	fmt.Println(responseDataJSON)
 
 	w.Write(responseDataJSON)
 }

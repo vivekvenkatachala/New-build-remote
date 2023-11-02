@@ -63,12 +63,14 @@ func authConfigs() map[string]types.AuthConfig {
 }
 
 func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, buildArgs map[string]interface{}, dockerFileName string) (*Image, []string, error) {
+	fmt.Println("Started remote build --------------------------------------------------------")
 	opts := types.ImageBuildOptions{
 		BuildArgs:   normalizeBuildArgs(buildArgs),
 		AuthConfigs: authConfigs(),
 		Tags:        []string{tag},
 		Dockerfile:  dockerFileName,
 	}
+	fmt.Println("Docker File Name--------------------------------------------------------", dockerFileName)
 
 	cli, err := docker.NewDockerClient()
 	if err != nil {
@@ -76,6 +78,8 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 		fmt.Println(err.Error())
 		return nil, []string{}, err
 	}
+	fmt.Println("NewDockerClient --------------------------------------------------------")
+
 	var buildLogs []string
 
 	buildLogs = []string{"Checking the uploaded file format...", "Extracting the file..."}
@@ -97,6 +101,8 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 			buildLogs = append(buildLogs, line)
 		}
 	}
+	fmt.Println("response --------------------------------------------------------", resp.Body)
+
 
 	log4go.Info("Module: StartBuild, MethodName: ImageBuild, Message: Building the file as docker image")
 	defer resp.Body.Close()
@@ -108,6 +114,7 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 		log4go.Error("Module: StartBuild, MethodName: DisplayJSONMessagesStream, Message: %s ", err.Error())
 		return nil, []string{}, fmt.Errorf("something went wrong with file")
 	}
+	fmt.Println("DisplayJSONMessagesStream --------------------------------------------------------")
 
 	imgSummary, err := cli.FindImage(ctx, tag)
 
@@ -116,6 +123,8 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 		return nil, []string{}, err
 	}
 	log4go.Info("Module: StartBuild, MethodName: FindImage, Message: Finding Image using the tag - " + tag + " . The size of the Image - " + strconv.Itoa(int(imgSummary.Size)))
+	fmt.Println("FindImage --------------------------------------------------------", imgSummary.ID, "---SIZE----",imgSummary.Size)
+
 	image := &Image{
 		ID:  imgSummary.ID,
 		Tag: tag,
@@ -136,6 +145,8 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 	}
 
 	log4go.Info("Module: StartBuild, MethodName: PushImage, Message: Docker Image - " + image.Tag)
+	fmt.Println("PushImage --------------------------------------------------------", image)
+
 	return image, buildLogs, nil
 }
 
