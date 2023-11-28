@@ -287,6 +287,10 @@ fileExtensionChanged:
 
 			filePath = "extracted_file/" + input.AppId + "/" + input.DockerFilePath
 
+			if !strings.HasSuffix(input.DockerFilePath, "/") {
+				input.DockerFilePath += "/"
+			}
+
 			filePathDock := "extracted_file/" + input.AppId + "/" + input.DockerFilePath + "" + dockerFileName
 
 			if _, err := os.Stat(filePathDock); os.IsNotExist(err) {
