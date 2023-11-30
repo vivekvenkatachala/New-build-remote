@@ -447,7 +447,6 @@ fileExtensionChanged:
 		http.Error(w, "Failed to marshal response", http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(responseDataJSON)
 
 	w.Write(responseDataJSON)
 }

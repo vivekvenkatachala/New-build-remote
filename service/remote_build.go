@@ -46,7 +46,7 @@ func GetFileFromPrivateRepo(SourceURL, patToken string) ([]byte, error) {
 }
 
 func FindFile(path string) (string, error) {
-
+	fmt.Println("PATH - 1 ---------------------------", path)
 	f, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)
@@ -60,6 +60,7 @@ func FindFile(path string) (string, error) {
 	var pathName string
 	for _, v := range files {
 		pathName = v.Name()
+		fmt.Println(pathName)
 		if pathName == "__MACOSX" {
 			continue
 		} else {
@@ -69,6 +70,7 @@ func FindFile(path string) (string, error) {
 	}
 
 	filePath := path + "/" + pathName
+	fmt.Println("PATH - 2 ---------------------------",filePath)
 	f, err = os.Open(filePath)
 	if err != nil {
 		fmt.Println(err)
@@ -86,7 +88,7 @@ func FindFile(path string) (string, error) {
 		} else {
 			filePath = ""
 		}
- 
+
 	}
 	if filePath == "" {
 		filePath, _ = FindFileEx("extracted_file/")
@@ -99,7 +101,7 @@ func FindFile(path string) (string, error) {
 }
 
 func FindFileEx(path string) (string, error) {
-
+fmt.Println("PATH - 3 ----------------------------", path)
 	f, err := os.Open(path)
 	if err != nil {
 		fmt.Println(err)
@@ -113,6 +115,7 @@ func FindFileEx(path string) (string, error) {
 	var pathName string
 	for _, v := range files {
 		pathName = v.Name()
+		fmt.Println(pathName)
 		if pathName == "__MACOSX" {
 			continue
 		} else {
