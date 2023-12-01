@@ -8,11 +8,13 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"start_build/internal"
 	"strconv"
 	"strings"
+	"time"
 
 	"start_build/builtin"
 
@@ -423,6 +425,12 @@ fileExtensionChanged:
 		}
 		ArchiveFile = bytes.NewReader(reader)
 	}
+
+	if input.ImageTag == "" {
+		randomString := generateRandomString(rand.Intn(3) + 6)
+		input.ImageTag = "nife123/" + input.AppId + ":deployment-" + randomString
+	}
+
 	img, buildLogs, err := buildimage.BuildImage(context.TODO(), ArchiveFile, input.ImageTag, &Out, input.BuildArgs, dockerFileName)
 
 	if err != nil {
@@ -457,4 +465,16 @@ func isFolderEmpty(folderPath string) (bool, error) {
 		return false, err
 	}
 	return len(dir) == 0, nil
+}
+
+func generateRandomString(length int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	rand.Seed(time.Now().UnixNano())
+
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[rand.Intn(len(charset))]
+	}
+
+	return string(b)
 }

@@ -63,13 +63,12 @@ func authConfigs() map[string]types.AuthConfig {
 }
 
 func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, buildArgs map[string]interface{}, dockerFileName string) (*Image, []string, error) {
-	fmt.Println("-----------------------------", tag)
-	fmt.Println("-----------------------------", tag)
-	fmt.Println("-----------------------------", tag)
-	fmt.Println("-----------------------------", tag)
-	fmt.Println("-----------------------------", tag)
-	fmt.Println("-----------------------------", tag)
-	fmt.Println("-----------------------------", tag)
+
+	fmt.Println("------------------", tag)
+	fmt.Println("------------------", tag)
+	fmt.Println("------------------", tag)
+	fmt.Println("------------------", tag)
+	fmt.Println("------------------", tag)
 
 	fmt.Println("Started remote build --------------------------------------------------------")
 	opts := types.ImageBuildOptions{
@@ -111,7 +110,6 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 	}
 	fmt.Println("response --------------------------------------------------------", resp.Body)
 
-
 	log4go.Info("Module: StartBuild, MethodName: ImageBuild, Message: Building the file as docker image")
 	defer resp.Body.Close()
 
@@ -131,7 +129,7 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 		return nil, []string{}, err
 	}
 	log4go.Info("Module: StartBuild, MethodName: FindImage, Message: Finding Image using the tag - " + tag + " . The size of the Image - " + strconv.Itoa(int(imgSummary.Size)))
-	fmt.Println("FindImage --------------------------------------------------------", imgSummary.ID, "---SIZE----",imgSummary.Size)
+	fmt.Println("FindImage --------------------------------------------------------", imgSummary.ID, "---SIZE----", imgSummary.Size)
 
 	image := &Image{
 		ID:  imgSummary.ID,
@@ -172,8 +170,6 @@ func RemoveImage(imageID string) error {
 	return nil
 }
 
-
-
 func normalizeBuildArgs(buildArgs map[string]interface{}) map[string]*string {
 	var out = map[string]*string{}
 	for k, v := range buildArgs {
@@ -181,7 +177,3 @@ func normalizeBuildArgs(buildArgs map[string]interface{}) map[string]*string {
 	}
 	return out
 }
-
-
-
-
