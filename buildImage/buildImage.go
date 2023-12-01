@@ -63,6 +63,14 @@ func authConfigs() map[string]types.AuthConfig {
 }
 
 func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, buildArgs map[string]interface{}, dockerFileName string) (*Image, []string, error) {
+	fmt.Println("-----------------------------", tag)
+	fmt.Println("-----------------------------", tag)
+	fmt.Println("-----------------------------", tag)
+	fmt.Println("-----------------------------", tag)
+	fmt.Println("-----------------------------", tag)
+	fmt.Println("-----------------------------", tag)
+	fmt.Println("-----------------------------", tag)
+
 	fmt.Println("Started remote build --------------------------------------------------------")
 	opts := types.ImageBuildOptions{
 		BuildArgs:   normalizeBuildArgs(buildArgs),
@@ -173,3 +181,7 @@ func normalizeBuildArgs(buildArgs map[string]interface{}) map[string]*string {
 	}
 	return out
 }
+
+
+
+
