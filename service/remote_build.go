@@ -96,7 +96,6 @@ func FindFile(path string) (string, error) {
 	if filePath == "" {
 		filePath = "Docker file doesn't exists"
 	}
-	filePath = "extracted_file/startbuildlogs/Dockerfile"
 	return filePath, err
 }
 
