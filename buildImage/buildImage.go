@@ -121,6 +121,11 @@ func BuildImage(ctx context.Context, tar io.Reader, tag string, out io.Writer, b
 		return nil, []string{}, fmt.Errorf("something went wrong with file")
 	}
 	fmt.Println("DisplayJSONMessagesStream --------------------------------------------------------")
+	fmt.Println(tag)
+	fmt.Println(tag)
+	fmt.Println(tag)
+	fmt.Println(tag)
+	fmt.Println(" --------------------------------------------------------")
 
 	imgSummary, err := cli.FindImage(ctx, tag)
 
