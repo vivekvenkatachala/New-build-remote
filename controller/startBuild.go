@@ -426,10 +426,10 @@ fileExtensionChanged:
 		ArchiveFile = bytes.NewReader(reader)
 	}
 
-	if input.ImageTag == "" {
-		randomString := generateRandomString(rand.Intn(3) + 6)
-		input.ImageTag = "nife123/" + input.AppId + ":deployment-" + randomString
-	}
+	// if input.ImageTag == "" {
+	// 	randomString := generateRandomString(rand.Intn(3) + 6)
+	// 	input.ImageTag = "nife123/" + input.AppId + ":deployment-" + randomString
+	// }
 
 	img, buildLogs, err := buildimage.BuildImage(context.TODO(), ArchiveFile, input.ImageTag, &Out, input.BuildArgs, dockerFileName)
 
