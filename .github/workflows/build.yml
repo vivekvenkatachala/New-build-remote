@@ -1,4 +1,4 @@
-name: Build Nife.io
+name: Build remote-build
 
 on:
   push:
