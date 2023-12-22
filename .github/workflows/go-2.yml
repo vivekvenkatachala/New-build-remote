@@ -4,7 +4,7 @@ on:
     inputs:
       logLevel:
         description: 'Log level'     
-        required: true
+        required: false
         default: 'warning'
 
 jobs:
