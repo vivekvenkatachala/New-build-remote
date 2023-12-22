@@ -29,5 +29,5 @@ jobs:
     - name: Archive production artifacts
       uses: actions/upload-artifact@v2
       with:
-          name: start_build
+        name: start_build
           
