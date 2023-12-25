@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/Microsoft/hcsshim v0.9.1 // indirect
+	github.com/alecthomas/log4go v0.0.0-20180109082532-d146e6b86faa
 	github.com/briandowns/spinner v1.16.0
 	github.com/codeclysm/extract v2.2.0+incompatible
 	github.com/containerd/containerd v1.5.8 // indirect
