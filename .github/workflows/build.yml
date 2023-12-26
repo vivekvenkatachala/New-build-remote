@@ -62,5 +62,6 @@ jobs:
           upload_url: ${{ steps.create-new-release.outputs.upload_url }}
           asset_path: ./start_build
           asset_name: start_build-v${{ github.run_number }}
+          asset_content_type: application/x-executable
         
           
