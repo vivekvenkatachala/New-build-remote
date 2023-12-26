@@ -24,12 +24,6 @@ jobs:
       - name: Build
         run: go build .
 
-      - name: Archive Build
-        uses: actions/upload-artifact@v2
-        with:
-          name: start_build
-          path: artifact
-
   release:
     name: Release
     runs-on: ubuntu-latest
@@ -44,21 +38,10 @@ jobs:
           go-version: 1.16
 
       - name: Create Release
-        id: create-new-release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
         
         with:
-          tag_name: ${{ github.run_number }}
+          tag_name: ${{ github.run_number}}
           release_name: Release ${{ github.run_number }}
-          
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-new-release.outputs.upload_url }}
-          asset_path: artifact/start_build
-          asset_name: start_build-v${{ github.run_number }}
-          asset_content_type: application/x-executable
