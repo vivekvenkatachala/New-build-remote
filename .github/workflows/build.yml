@@ -30,13 +30,6 @@ jobs:
           name: start_build
           path: ./start_build
           
-
-  release:
-    name: Release
-    runs-on: ubuntu-latest
-    needs: build  # Ensure the build job completes before starting the release job
-    steps:
-      
       - name: Create Release
         id: create-new-release
         uses: actions/create-release@v1
@@ -57,4 +50,7 @@ jobs:
           asset_name: start_build-v${{ github.run_number }}
           asset_content_type: application/x-executable
         
+
+ 
+      
           
