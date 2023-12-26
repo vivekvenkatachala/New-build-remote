@@ -40,16 +40,10 @@ jobs:
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          body: "Release ${{ github.ref }}"
-          draft: false
-          prerelease: false
-
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v2
-        with:
-          name: release
-          path: .  # You may need to adjust this depending on your project structure
-          if-no-files-found: error
+          tag_name: ${{ github.run_number}}
+          release_name: Release ${{ github.run_number }}
+          
