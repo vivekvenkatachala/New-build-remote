@@ -28,6 +28,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: start_build
+          path: .
           
 
   release:
