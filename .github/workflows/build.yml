@@ -28,7 +28,9 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: start_build
-          path: .
+           path: |
+                artifact
+                !artifact/**/*.md
           
 
   release:
@@ -60,8 +62,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create-new-release.outputs.upload_url }}
-          asset_path: ./start_build
-          asset_name: start_build
+          asset_path: artifact/start_build
+          asset_name: start_build-v${{ github.run_number }}
           asset_content_type: application/x-executable
         
           
