@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - vivek-patch-2
+  workflow_dispatch: # Add this section to enable manual triggering
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'vivek-patch-2' # Set a default branch or remove this line if not needed
 
 jobs:
   build:
