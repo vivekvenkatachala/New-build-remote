@@ -1,4 +1,4 @@
-name: Build and Deploy to GCP Cloud Run
+name: Build and Deploy to GCP
 
 on:
   workflow_dispatch:
