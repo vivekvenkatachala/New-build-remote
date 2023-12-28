@@ -1,12 +1,11 @@
 name: Build and Deploy to GCP 
-
 on:
   workflow_dispatch: 
     inputs:
-      branch:
-        description: 'Branch to deploy'
+      logLevel:
+        description: 'Log level'     
         required: true
-        default: 'vivek-patch-2'
+        default: 'warning'
 
 jobs:
   build:
