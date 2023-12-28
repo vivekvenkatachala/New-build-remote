@@ -1,31 +1,27 @@
-name: Build and Deploy to GCP 
+  
+ name: Build remote-build
+
 on:
-  workflow_dispatch: 
-    inputs:
-      logLevel:
-        description: 'Log level'     
-        required: true
-        default: 'warning'
-
+  push:
+    branches: vivek-patch-2
+    
 jobs:
+
   build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+   name: build
+   runs-on: ubuntu-latest
+   steps:
+    - uses: actions/checkout@v3
 
-      - name: Set up Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: 1.16
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
 
-      - name: Install Modules
-        run: go mod tidy
-
-      - name: Build
-        run: go build .
-        path: ./start_build
-
+    - name: Install Modules
+      run: go mod tidy
       
- 
+    - name: Build
+      run: go build -v ./...
+      
+          
