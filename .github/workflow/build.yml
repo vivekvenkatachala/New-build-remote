@@ -1,9 +1,12 @@
 name: Build and Deploy to GCP Cloud Run
 
-on:
-  push:
-    branches:
-      - vivek-patch-2
+workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
+
 
 jobs:
   build:
