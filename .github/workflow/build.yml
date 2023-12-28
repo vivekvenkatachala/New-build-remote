@@ -1,9 +1,13 @@
-name: Build and Deploy to GCP
+name: Build and Deploy to GCP 
 
 on:
-  workflow_dispatch:
-    
-     
+  workflow_dispatch: 
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'vivek-patch-2'
+
 jobs:
   build:
     name: Build
@@ -22,13 +26,9 @@ jobs:
 
       - name: Build
         run: go build .
+        path: ./start_build
 
-      - name: Archive Build
-        uses: actions/upload-artifact@v2
-        with:
-          name: start_build
-          path: ./start_build
-
+      
   deploy: 
     name: Deploy to GCP VM
     runs-on: ubuntu-latest
@@ -37,15 +37,29 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+
+      # Add Google Cloud authentication steps here
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider'
+          service_account: bucket-handler@nested-vms-290310.iam.gserviceaccount.com
+
+
       - name: Set up Google Cloud SDK
-        uses: GoogleCloudPlatform/github-actions/setup-gcloud@v0.5.0
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
+
+      - name: 'Use gcloud CLI'
+        run: 'gcloud info'
+      
+
       - name: Copy files to GCP VM
         run: scp -r ./start_build/* root@34.100.157.130:/home/azureserver
 
       - name: Run deployment script on GCP VM
-        run: ssh root@34.100.157.130 'cd /home/azureserver && ./start_build'
+        run: ssh root@34.100.157.130 bash 'cd /home/azureserver && ./start_build'
