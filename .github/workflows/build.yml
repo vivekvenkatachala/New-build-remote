@@ -1,24 +1,55 @@
-name: Build remote-build
+name: Build-and-release
 
 on:
-  push:
-    branches: vivek-patch-2
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'     
+        required: true
+        default: 'warning'
     
 jobs:
-
   build:
-   name: build
-   runs-on: ubuntu-latest
-   steps:
-    - uses: actions/checkout@v3
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.16
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
 
-    - name: Install Modules
-      run: go mod tidy
-      
-    - name: Build
-      run: go build -v ./...
+      - name: Install Modules
+        run: go mod tidy
+
+      - name: Build
+        run: go build .
+
+      - name: Archive Build
+        uses: actions/upload-artifact@v2
+        with:
+          name: start_build
+          path: ./start_build
+          
+      - name: Create Release
+        id: create-new-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        
+        with:
+          tag_name: ${{ github.run_number}}
+          release_name: Release ${{ github.run_number }}
+          
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-new-release.outputs.upload_url }}
+          asset_path: ./start_build
+          asset_name: start_build-v${{ github.run_number }}
+          asset_content_type: application/x-executable
+
