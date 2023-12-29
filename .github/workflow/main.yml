@@ -1,12 +1,9 @@
 name: Prerelease-remote-build
 
 on:
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'
-        required: true
-        default: 'warning'
+  push:
+    tags:
+      - 'my-manual-trigger'
 
 jobs:
   build:
